@@ -172,11 +172,11 @@ const Filters = (() => {
   }
 
   function market(p) {
-    const n = parseFloat(p.estimatedMarketValue);
+    const n = parseFloat(p.avg_price);
     return (!n || n === 0) ? null : Math.round(n);
   }
   function retail(p) {
-    const n = parseFloat(p.retailPrice);
+    const n = parseFloat(p.retail_price);
     return (!n || n === 0) ? null : Math.round(n);
   }
   function premium(p) {

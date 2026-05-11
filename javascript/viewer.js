@@ -1,36 +1,33 @@
 /**
- * viewer.js
- * 360° drag-to-rotate viewer — adapted for TSDB image shape:
- * image: { original, small, thumbnail, 360: [] }
+ * viewer.js — KicksDB image shape:
+ *   image (string), gallery (array), gallery_360 (array)
  */
- 
+
 const Viewer = (() => {
- 
+
   let frames   = [];
   let current  = 0;
   let dragging = false;
   let startX   = 0;
   let startFrame = 0;
- 
+
   function load(product) {
-    const img = product.image || {};
- 
-    // Use 360 frames if available, else build gallery from available sizes
-    if (img['360'] && img['360'].length > 1) {
-      frames = img['360'];
+    if (product.gallery_360 && product.gallery_360.length > 1) {
+      frames = product.gallery_360;
+    } else if (product.gallery && product.gallery.length > 0) {
+      frames = product.gallery;
+    } else if (product.image) {
+      frames = [product.image];
     } else {
-      // Build a de-duped array of available image URLs
-      const candidates = [img.original, img.small, img.thumbnail].filter(Boolean);
-      const unique = [...new Set(candidates)];
-      frames = unique.length ? unique : [];
+      frames = [];
     }
- 
+
     current = 0;
     updateFrame();
     resetHint();
     buildStrip(product);
   }
- 
+
   function updateFrame() {
     if (!frames.length) return;
     const el = document.getElementById('viewerImg');
@@ -38,21 +35,19 @@ const Viewer = (() => {
     const fc = document.getElementById('viewerFrame');
     if (fc) fc.textContent = `${current + 1} / ${frames.length}`;
   }
- 
+
   function resetHint() {
     const h = document.getElementById('viewerHint');
     if (h) h.style.opacity = frames.length > 1 ? '1' : '0';
   }
- 
+
   function buildStrip(product) {
     const strip = document.getElementById('galleryStrip');
     if (!strip) return;
-    const img = product.image || {};
-    const imgs = [img.original, img.small, img.thumbnail]
-      .filter(Boolean)
-      .filter((v, i, a) => a.indexOf(v) === i) // de-dup
-      .slice(0, 4);
- 
+    const imgs = product.gallery && product.gallery.length
+      ? product.gallery.slice(0, 6)
+      : (product.image ? [product.image] : []);
+
     strip.innerHTML = imgs.map((src, i) => `
       <img class="g-thumb${i === 0 ? ' active' : ''}"
         src="${src}" alt="View ${i + 1}"
@@ -60,7 +55,7 @@ const Viewer = (() => {
         loading="lazy" />
     `).join('');
   }
- 
+
   function setFromThumb(src, el) {
     frames  = [src];
     current = 0;
@@ -68,8 +63,7 @@ const Viewer = (() => {
     document.querySelectorAll('.g-thumb').forEach(t => t.classList.remove('active'));
     el.classList.add('active');
   }
- 
-  // ── Drag handlers ──
+
   function onMouseDown(e) {
     if (frames.length < 2) return;
     dragging = true; startX = e.clientX; startFrame = current;
@@ -85,7 +79,7 @@ const Viewer = (() => {
     updateFrame();
   }
   function onMouseUp() { dragging = false; }
- 
+
   function onTouchStart(e) {
     if (frames.length < 2) return;
     dragging = true; startX = e.touches[0].clientX; startFrame = current;
@@ -99,7 +93,7 @@ const Viewer = (() => {
     updateFrame();
   }
   function onTouchEnd() { dragging = false; }
- 
+
   function bindEvents() {
     const c = document.getElementById('viewerContainer');
     if (!c) return;
@@ -110,7 +104,7 @@ const Viewer = (() => {
     window.addEventListener('touchmove', onTouchMove, { passive: true });
     window.addEventListener('touchend',  onTouchEnd);
   }
- 
+
   return { load, setFromThumb, bindEvents };
- 
+
 })();

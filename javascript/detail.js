@@ -1,13 +1,7 @@
 /**
- * detail.js
- * DRIP-style detail overlay — adapted for The Sneaker Database (TSDB).
- *
- * TSDB product fields:
- *   id, name, brand, colorway, gender, silhouette, sku,
- *   releaseDate, retailPrice, estimatedMarketValue,
- *   image: { original, small, thumbnail, 360: [] },
- *   links: { stockX, goat, flightClub, stadiumGoods },
- *   story, description
+ * detail.js — KicksDB field mapping:
+ *   title, brand, sku, description, image, gallery[], gallery_360[],
+ *   avg_price, min_price, max_price, retail_price, weekly_orders
  */
 
 const Detail = (() => {
@@ -15,7 +9,7 @@ const Detail = (() => {
   let currentProduct = null;
   let panelObserver  = null;
 
-  async function open(id) {
+  async function open(id, slug) {
     const overlay = document.getElementById('detailOverlay');
     overlay.scrollTop = 0;
     document.querySelectorAll('.drip-panel').forEach(p => p.classList.remove('visible'));
@@ -27,7 +21,11 @@ const Detail = (() => {
     setText('dsSku',   '');
 
     try {
-      const product = await API.getProduct(id);
+      // Try id first, fall back to slug
+      let product = await API.getProduct(id);
+      if (!product || isEmptyProduct(product)) {
+        product = await API.getProduct(slug);
+      }
       if (!product) { UI.toast('Product not found'); close(); return; }
       currentProduct = product;
       populate(product);
@@ -40,6 +38,10 @@ const Detail = (() => {
     }
   }
 
+  function isEmptyProduct(p) {
+    return !p.avg_price && !p.min_price && !p.max_price;
+  }
+
   function close() {
     document.getElementById('detailOverlay').classList.remove('open');
     UI.unlockScroll();
@@ -49,95 +51,83 @@ const Detail = (() => {
   }
 
   function populate(p) {
-    const market = price(p.estimatedMarketValue);
-    const retail = price(p.retailPrice);
-    const prem   = (market && retail) ? UI.calcPremium(market, retail) : null;
+    const avg    = price(p.avg_price);
+    const retail = price(p.retail_price) || extractRetailFromDesc(p.description);
+    const min    = price(p.min_price);
+    const max    = price(p.max_price);
+    const weekly = Math.round(parseFloat(p.weekly_orders) || 0);
+    const noData = !avg && !min && !max;
 
     // ── Hero ──
     setText('dsBrand', p.brand || '—');
-    setText('dsName',  p.name  || '—');
-    setText('dsSku',   `SKU: ${p.sku || '—'}  ·  ${p.colorway || ''}  ·  Released: ${p.releaseDate ? p.releaseDate.split(' ')[0] : '—'}`);
-
-    // Hero image — use original (largest)
+    setText('dsName',  p.title || '—');
+    setText('dsSku',   'SKU: ' + (p.sku || '—'));
     const heroImg = document.getElementById('dsHeroImg');
-    if (heroImg) heroImg.src = p.image?.original || p.image?.small || '';
+    if (heroImg) heroImg.src = p.image || '';
 
     // ── Market Price ──
-    setText('dpPrice', market ? '$' + market.toLocaleString() : retail ? '$' + retail.toLocaleString() : '—');
+    setText('dpPrice', avg ? '$' + avg.toLocaleString() : '—');
     const premEl = document.getElementById('dpPremium');
     if (premEl) {
-      if (prem) {
+      if (avg && retail) {
+        const prem = UI.calcPremium(avg, retail);
         premEl.textContent = prem.label;
         premEl.className   = 'panel-sub ' + prem.cls;
       } else {
-        premEl.textContent = market ? 'Estimated market value' : 'No market data available';
+        premEl.textContent = noData ? 'No pricing data available' : 'Current market average';
         premEl.className   = 'panel-sub';
       }
     }
 
     // ── Retail ──
     setText('dpRetail',    retail ? '$' + retail.toLocaleString() : '—');
-    setText('dpRetailSub', retail ? 'Original retail price' : 'Retail price unavailable');
+    setText('dpRetailSub', retail ? 'Original retail price' : 'Not available from StockX API');
 
-    // ── Range (use retail as min, market as max) ──
-    setText('dpMin', retail ? '$' + retail.toLocaleString() : '—');
-    setText('dpMax', market ? '$' + market.toLocaleString() : '—');
+    // ── Range ──
+    setText('dpMin', min ? '$' + min.toLocaleString() : '—');
+    setText('dpMax', max ? '$' + max.toLocaleString() : '—');
 
-    // ── Weekly Sales — TSDB doesn't have this; show silhouette instead ──
-    setText('dpWeekly', p.silhouette || p.brand || '—');
+    // ── Weekly Sales ──
+    const mom = UI.momentum(weekly);
+    setText('dpWeekly', weekly ? weekly.toLocaleString() : '—');
     const weekSubEl = document.getElementById('dpWeeklySub');
     if (weekSubEl) {
-      weekSubEl.textContent = 'Silhouette family';
-      weekSubEl.className   = 'panel-sub';
+      weekSubEl.textContent = weekly ? mom.label + ' — orders this week' : 'No sales data available';
+      weekSubEl.className   = 'panel-sub' + (weekly ? ' ' + mom.cls : '');
     }
 
     // ── Outlook ──
-    const score = UI.outlookScore({
-      avg_price:     market,
-      retail_price:  retail,
-      weekly_orders: market && retail ? (market / retail > 1.5 ? 60 : 10) : 0
-    });
-    setText('dpVerdict', UI.outlookVerdict(score));
+    const score = UI.outlookScore(p);
+    setText('dpVerdict', noData ? 'Insufficient Data' : UI.outlookVerdict(score));
     const fillEl = document.getElementById('dpOutlookFill');
     if (fillEl) {
       fillEl.style.width      = '0%';
-      fillEl.style.background = UI.outlookColor(score);
-      setTimeout(() => { fillEl.style.width = score + '%'; }, 500);
+      fillEl.style.background = noData ? '#bbb' : UI.outlookColor(score);
+      setTimeout(() => { fillEl.style.width = (noData ? 50 : score) + '%'; }, 500);
     }
 
-    // ── Description — TSDB has both 'story' and 'description' ──
-    const raw = (p.story || p.description || 'No description available.').trim();
+    // ── Description ──
+    const raw = (p.description || 'No description available.').replace(/<[^>]+>/g, '').trim();
     setText('dpDesc', raw.length > 600 ? raw.slice(0, 600) + '…' : raw);
 
-    // ── Marketplace links ──
-    buildLinks(p.links);
+    if (noData) UI.toast('No live pricing for this item — try a different colorway', 4000);
   }
 
-  function buildLinks(links) {
-    if (!links) return;
-    // Inject marketplace links into description panel if any exist
-    const pairs = [
-      ['StockX',        links.stockX],
-      ['GOAT',          links.goat],
-      ['Flight Club',   links.flightClub],
-      ['Stadium Goods', links.stadiumGoods],
-    ].filter(([, url]) => url);
-
-    if (!pairs.length) return;
-    const desc = document.getElementById('dpDesc');
-    if (!desc) return;
-    const linkBar = document.createElement('div');
-    linkBar.style.cssText = 'margin-top:1.5rem;display:flex;gap:1rem;flex-wrap:wrap;';
-    pairs.forEach(([label, url]) => {
-      const a = document.createElement('a');
-      a.href   = url;
-      a.target = '_blank';
-      a.rel    = 'noopener';
-      a.textContent = `Buy on ${label} →`;
-      a.style.cssText = 'font-family:"DM Mono",monospace;font-size:0.65rem;letter-spacing:0.1em;color:#0d0d0d;text-decoration:underline;text-underline-offset:3px;';
-      linkBar.appendChild(a);
-    });
-    desc.parentNode.appendChild(linkBar);
+  function extractRetailFromDesc(desc) {
+    if (!desc) return null;
+    const patterns = [
+      /retail(?:s)?\s+(?:for|price\s+of|at)\s+\$([0-9,]+)/i,
+      /priced\s+at\s+\$([0-9,]+)/i,
+      /\$([0-9,]+)\s+retail/i,
+    ];
+    for (const re of patterns) {
+      const m = desc.match(re);
+      if (m) {
+        const n = parseInt(m[1].replace(/,/g, ''), 10);
+        if (!isNaN(n) && n > 0) return n;
+      }
+    }
+    return null;
   }
 
   function price(val) {
@@ -150,7 +140,7 @@ const Detail = (() => {
     if (panelObserver) panelObserver.disconnect();
     const overlay = document.getElementById('detailOverlay');
     panelObserver = new IntersectionObserver(
-      (entries) => entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); }),
+      entries => entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); }),
       { root: overlay, threshold: 0.1 }
     );
     document.querySelectorAll('.drip-panel').forEach(p => panelObserver.observe(p));

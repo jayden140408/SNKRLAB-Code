@@ -1,5 +1,7 @@
 /**
- * search.js
+ * search.js — KicksDB field mapping:
+ *   title, brand, image, avg_price, min_price,
+ *   retail_price, weekly_orders, product_type, id, slug
  */
 
 const Search = (() => {
@@ -7,18 +9,18 @@ const Search = (() => {
   let allProducts   = [];
   let currentFilter = 'all';
 
-  // ── Keyword search ──
   async function run() {
     const raw = document.getElementById('searchInput').value.trim();
     if (!raw) { UI.toast('Enter a search term first'); return; }
+
     UI.showError('');
-    renderLoading('Searching The Sneaker Database…');
+    renderLoading('Searching KicksDB…');
     showGrid('SEARCH RESULTS');
 
     try {
-      allProducts = await API.searchProducts(raw, 100);
+      allProducts = await API.searchProducts(raw, 48);
       if (!allProducts.length) {
-        UI.showError('No results — try "Jordan 4", "Yeezy Boost 350", "Nike Dunk"');
+        UI.showError('No results — try "Jordan 4", "Yeezy", "Dunk Low"');
         renderEmpty(); return;
       }
       Filters.setProducts(allProducts);
@@ -30,39 +32,30 @@ const Search = (() => {
     }
   }
 
-  /**
-   * Browse by category — no keyword, just fetches as many products as possible.
-   * @param {Object} opts
-   *   label   {string}   — display label
-   *   brands  {string[]} — fetch these brands in parallel (each gets own paginated call)
-   *   pages   {number}   — pages per brand request (100 items each), default 3
-   */
   async function browse(opts = {}) {
-    const { label = 'Browse', brands = [], pages = 5 } = opts;
+    const { label = 'Browse', brands = [] } = opts;
     UI.showError('');
     renderLoading(`Loading ${label}…`);
     showGrid(label.toUpperCase());
 
     try {
       let results = [];
-
       if (brands.length) {
-        // Fetch each brand's pages in parallel then merge
         const fetches = brands.map(brand =>
-          API.browseProducts({ brand }, pages).catch(() => [])
+          API.browseProducts({ brand, limit: 12 }).catch(() => [])
         );
         const arrays = await Promise.all(fetches);
         const seen   = new Set();
         arrays.flat().forEach(p => {
-          if (p.id && !seen.has(p.id)) { seen.add(p.id); results.push(p); }
+          const key = p.id || p.slug;
+          if (key && !seen.has(key)) { seen.add(key); results.push(p); }
         });
       } else {
-        // No brand — fetch as many as possible via pages
-        results = await API.browseProducts({}, pages);
+        results = await API.browseProducts({ brand: 'nike', limit: 48 });
       }
 
       if (!results.length) {
-        UI.showError(`No results found for ${label}`);
+        UI.showError(`No results for ${label}`);
         renderEmpty(); return;
       }
 
@@ -90,8 +83,17 @@ const Search = (() => {
     if (el) el.textContent = label;
   }
 
+  function applyTypeFilter(products) {
+    if (currentFilter === 'all') return products;
+    return products.filter(p => {
+      const type = (p.product_type || '').toLowerCase();
+      const cats  = (p.categories || []).map(c => c.toLowerCase());
+      return type.includes(currentFilter) || cats.some(c => c.includes(currentFilter));
+    });
+  }
+
   function renderGrid(products) {
-    renderFiltered(products);
+    renderFiltered(applyTypeFilter(products));
   }
 
   function renderFiltered(products) {
@@ -101,33 +103,34 @@ const Search = (() => {
   }
 
   function cardHTML(p) {
-    const market = price(p.estimatedMarketValue);
-    const retail = price(p.retailPrice);
-    const imgSrc = p.image?.small || p.image?.original || p.image?.thumbnail || '';
+    // KicksDB fields
+    const market = price(p.avg_price);
+    const min    = price(p.min_price);
+    const retail = price(p.retail_price);
+    const weekly = Math.round(parseFloat(p.weekly_orders) || 0);
+    const imgSrc = p.image || '';
     const hasImg = imgSrc.trim() !== '';
     const prem   = (market && retail) ? UI.calcPremium(market, retail) : null;
-    const ratio  = (market && retail) ? market / retail : 1;
-    const mom    = ratio > 1.5 ? { label: '↑ Hot',         cls: 'up'   }
-                 : ratio > 1.1 ? { label: '→ Stable',      cls: 'flat' }
-                 :               { label: '↓ Below retail', cls: 'down' };
+    const mom    = UI.momentum(weekly);
+    const type   = p.product_type || 'sneakers';
 
     return `
-      <div class="product-card" onclick="Detail.open('${escAttr(String(p.id))}')">
+      <div class="product-card" onclick="Detail.open('${escAttr(p.id || p.slug)}', '${escAttr(p.slug)}')">
         <div class="card-img-wrap">
           ${hasImg
-            ? `<img class="card-img" src="${escAttr(imgSrc)}" alt="${escAttr(p.name)}" loading="lazy"
+            ? `<img class="card-img" src="${escAttr(imgSrc)}" alt="${escAttr(p.title)}" loading="lazy"
                 onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
-               <div class="card-img-placeholder" style="display:none;"><span>${escAttr(p.brand||'—')}</span></div>`
-            : `<div class="card-img-placeholder"><span>${escAttr(p.brand||'—')}</span></div>`
+               <div class="card-img-placeholder" style="display:none;"><span>${escAttr(p.brand || '—')}</span></div>`
+            : `<div class="card-img-placeholder"><span>${escAttr(p.brand || '—')}</span></div>`
           }
-          <div class="card-type-badge">sneakers</div>
+          <div class="card-type-badge">${type}</div>
         </div>
         <div class="card-body">
           <div class="card-brand">${p.brand || '—'}</div>
-          <div class="card-name">${p.name || '—'}</div>
+          <div class="card-name">${p.title || '—'}</div>
           <div class="card-prices">
-            <div class="card-price">${market ? '$'+market.toLocaleString() : retail ? '$'+retail.toLocaleString() : '—'}</div>
-            ${retail ? `<div class="card-retail">Retail $${retail.toLocaleString()}</div>` : ''}
+            <div class="card-price">${market ? '$' + market.toLocaleString() : '—'}</div>
+            ${min ? `<div class="card-retail">from $${min.toLocaleString()}</div>` : ''}
             <div class="card-delta ${mom.cls}">${mom.label}</div>
           </div>
           ${prem ? `<div class="card-premium ${prem.cls}">${prem.label}</div>` : ''}
