@@ -1,0 +1,212 @@
+/* ─── VARIABLES ─── */
+:root {
+  --bg: #f2efe9;
+  --bg2: #e8e4dc;
+  --black: #0d0d0d;
+  --gray: #888;
+  --gray2: #bbb;
+  --border: rgba(0,0,0,0.09);
+  --red: #d63b2f;
+  --green: #1a7a3c;
+  --shadow: 0 8px 40px rgba(0,0,0,0.07);
+}
+
+/* ─── BASE ─── */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--black);
+  font-family: 'Syne', sans-serif;
+  overflow-x: hidden;
+}
+
+/* ─── NAV ─── */
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 500;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 2.5rem; height: 54px;
+  background: rgba(242,239,233,0.94);
+  border-bottom: 1px solid var(--border);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+.logo {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.55rem;
+  letter-spacing: 0.18em;
+}
+
+.nav-right { display: flex; gap: 2rem; align-items: center; }
+
+.nav-link {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.62rem; letter-spacing: 0.2em;
+  text-transform: uppercase; color: var(--gray);
+  text-decoration: none; transition: color .2s;
+}
+.nav-link:hover { color: var(--black); }
+
+.nav-btn {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.62rem; letter-spacing: 0.15em;
+  padding: 0.45rem 1.1rem;
+  background: var(--black); color: var(--bg);
+  border: none; border-radius: 2px;
+  cursor: pointer; transition: opacity .2s;
+}
+.nav-btn:hover { opacity: .75; }
+
+/* ─── HERO ─── */
+.hero {
+  min-height: 100vh;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 80px 2rem 4rem;
+  text-align: center;
+}
+
+.hero-eyebrow {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.62rem; letter-spacing: 0.3em;
+  text-transform: uppercase; color: var(--gray);
+  margin-bottom: 1.5rem;
+  opacity: 0; animation: fadeUp .8s .2s forwards;
+}
+
+.hero-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(5rem, 14vw, 11rem);
+  letter-spacing: 0.04em; line-height: 0.88;
+  opacity: 0; animation: fadeUp .9s .35s forwards;
+}
+.hero-title span { color: var(--gray2); }
+
+.hero-sub {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.72rem; letter-spacing: 0.12em;
+  color: var(--gray); margin-top: 1.8rem;
+  opacity: 0; animation: fadeUp .8s .5s forwards;
+}
+
+/* ─── SEARCH BOX ─── */
+.search-box {
+  margin-top: 3rem; display: flex;
+  width: 100%; max-width: 600px;
+  border: 1px solid rgba(0,0,0,0.16);
+  border-radius: 3px; overflow: hidden;
+  background: #fff; box-shadow: var(--shadow);
+  opacity: 0; animation: fadeUp .8s .65s forwards;
+}
+
+.search-box input {
+  flex: 1; border: none; outline: none;
+  padding: 1.1rem 1.4rem;
+  font-family: 'Syne', sans-serif; font-size: 0.95rem;
+  background: transparent; color: var(--black);
+}
+.search-box input::placeholder { color: var(--gray2); }
+
+.search-box button {
+  background: var(--black); color: var(--bg);
+  border: none; font-family: 'DM Mono', monospace;
+  font-size: 0.65rem; letter-spacing: 0.18em;
+  text-transform: uppercase; padding: 0 2rem;
+  cursor: pointer; transition: opacity .2s; white-space: nowrap;
+}
+.search-box button:hover { opacity: .8; }
+
+/* ─── FILTER TABS ─── */
+.filter-row {
+  display: flex; gap: 0.6rem; margin-top: 1.2rem;
+  flex-wrap: wrap; justify-content: center;
+  opacity: 0; animation: fadeUp .8s .8s forwards;
+}
+
+.ftab {
+  font-family: 'DM Mono', monospace; font-size: 0.58rem;
+  letter-spacing: 0.15em; text-transform: uppercase;
+  padding: 0.35rem 1rem; border-radius: 20px;
+  border: 1px solid var(--border);
+  background: transparent; cursor: pointer;
+  color: var(--gray); transition: all .2s;
+}
+.ftab:hover, .ftab.on {
+  background: var(--black); color: var(--bg);
+  border-color: var(--black);
+}
+
+/* ─── API STRIP ─── */
+.api-strip {
+  display: none; align-items: center; gap: 1rem;
+  flex-wrap: wrap;
+  background: rgba(13,13,13,0.04);
+  border: 1px solid rgba(13,13,13,0.1);
+  margin: 0 2.5rem 2rem;
+  padding: 1rem 1.4rem; border-radius: 3px;
+}
+.api-strip.visible { display: flex; }
+
+.api-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.62rem; letter-spacing: 0.15em;
+  text-transform: uppercase; color: var(--gray);
+  white-space: nowrap;
+}
+
+.api-input {
+  flex: 1; min-width: 240px;
+  border: none; border-bottom: 1px solid var(--border);
+  background: transparent; outline: none;
+  font-family: 'DM Mono', monospace; font-size: 0.75rem;
+  padding: 0.3rem 0.4rem; color: var(--black);
+}
+.api-input::placeholder { color: var(--gray2); }
+
+.api-save-btn {
+  font-family: 'DM Mono', monospace; font-size: 0.62rem;
+  letter-spacing: 0.12em; padding: 0.45rem 1.1rem;
+  background: var(--black); color: var(--bg);
+  border: none; border-radius: 2px; cursor: pointer;
+  transition: opacity .2s;
+}
+.api-save-btn:hover { opacity: .75; }
+
+.api-note {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.58rem; color: var(--gray2);
+  letter-spacing: 0.05em;
+}
+
+/* ─── SEARCH ERROR ─── */
+.search-error {
+  display: none; margin-top: 1rem;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.68rem; color: var(--red);
+  letter-spacing: 0.05em;
+}
+.search-error.visible { display: block; }
+
+/* ─── TOAST ─── */
+.toast {
+  position: fixed; bottom: 2rem; right: 2rem; z-index: 9000;
+  background: var(--black); color: var(--bg);
+  font-family: 'DM Mono', monospace; font-size: 0.7rem;
+  letter-spacing: 0.08em; padding: 0.8rem 1.5rem;
+  border-radius: 3px; transform: translateY(80px);
+  opacity: 0; transition: all .3s; pointer-events: none;
+}
+.toast.show { transform: translateY(0); opacity: 1; }
+
+/* ─── SCROLLBAR ─── */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--gray2); border-radius: 2px; }
+
+/* ─── Nav links as buttons ─── */
+.nav-link {
+  cursor: pointer;
+  text-decoration: none;
+}

@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VAULT — Sneaker & Apparel Intelligence</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@400;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/main.css" />
+  <link rel="stylesheet" href="/css/grid.css" />
+  <link rel="stylesheet" href="/css/detail.css" />
+  <link rel="stylesheet" href="/css/filters.css" />
+  <link rel="stylesheet" href="/css/animations.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+</head>
+<body>
+
+  <!-- ─── NAV ─── -->
+  <nav id="navbar">
+    <div class="logo">SNKRLAB</div>
+    <div class="nav-right">
+      <a class="nav-link" onclick="navSneakers()">Sneakers</a>
+      <a class="nav-link" onclick="navApparel()">Apparel</a>
+      <a class="nav-link" onclick="navTrending()">Trending</a>
+    </div>
+  </nav>
+
+  <!-- ─── HERO / SEARCH ─── -->
+  <section class="hero">
+    <p class="hero-eyebrow">Powered by The Sneaker Database · Real-time Pricing</p>
+    <h1 class="hero-title">MARKET<br><span>INTEL</span></h1>
+    <p class="hero-sub">Sneaker & streetwear analytics — prices, trends, resale premiums</p>
+
+    <div class="search-box">
+      <input id="searchInput" type="text"
+        placeholder="Search Jordan 4, Yeezy, Dunk Low, New Balance…"
+        autocomplete="off" />
+      <button onclick="Search.run()">Analyse →</button>
+    </div>
+
+    <p class="search-error" id="searchError"></p>
+  </section>
+
+  <!-- ─── GRID SECTION ─── -->
+  <section class="grid-section" id="gridSection" style="display:none;">
+
+    <div class="grid-header">
+      <div class="grid-label">MARKET FEED</div>
+      <div class="grid-header-right">
+        <div class="grid-count" id="gridCount">0 ITEMS</div>
+        <button class="filter-toggle-btn" onclick="Filters.toggle()" id="filterToggleBtn">
+          ⊞ Filters
+        </button>
+      </div>
+    </div>
+
+    <div class="grid-body">
+
+      <!-- ─── FILTER SIDEBAR ─── -->
+      <aside class="filter-sidebar" id="filterSidebar">
+
+        <div class="filter-sidebar-header">
+          <span>FILTERS</span>
+          <button class="filter-clear-btn" onclick="Filters.clear()">Clear all</button>
+        </div>
+
+        <!-- Price Range -->
+        <div class="filter-group">
+          <div class="filter-group-title" onclick="Filters.toggleGroup(this)">
+            Price Range <span class="fg-arrow">↓</span>
+          </div>
+          <div class="filter-group-body">
+            <div class="price-inputs">
+              <div class="price-field">
+                <label>Min ($)</label>
+                <input type="number" id="fPriceMin" placeholder="0" onchange="Filters.apply()" />
+              </div>
+              <div class="price-sep">—</div>
+              <div class="price-field">
+                <label>Max ($)</label>
+                <input type="number" id="fPriceMax" placeholder="Any" onchange="Filters.apply()" />
+              </div>
+            </div>
+            <div class="price-presets">
+              <button onclick="Filters.setPrice(0,200)">Under $200</button>
+              <button onclick="Filters.setPrice(200,500)">$200–$500</button>
+              <button onclick="Filters.setPrice(500,1000)">$500–$1k</button>
+              <button onclick="Filters.setPrice(1000,null)">$1k+</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Brand -->
+        <div class="filter-group">
+          <div class="filter-group-title" onclick="Filters.toggleGroup(this)">
+            Brand <span class="fg-arrow">↓</span>
+          </div>
+          <div class="filter-group-body">
+            <div class="filter-checkboxes" id="brandList"></div>
+          </div>
+        </div>
+
+        <!-- Gender -->
+        <div class="filter-group">
+          <div class="filter-group-title" onclick="Filters.toggleGroup(this)">
+            Gender <span class="fg-arrow">↓</span>
+          </div>
+          <div class="filter-group-body">
+            <div class="filter-checkboxes">
+              <label class="fcheck"><input type="checkbox" value="men"   onchange="Filters.apply()"> Men</label>
+              <label class="fcheck"><input type="checkbox" value="women" onchange="Filters.apply()"> Women</label>
+              <label class="fcheck"><input type="checkbox" value="youth" onchange="Filters.apply()"> Youth</label>
+              <label class="fcheck"><input type="checkbox" value="unisex" onchange="Filters.apply()"> Unisex</label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Market vs Retail -->
+        <div class="filter-group">
+          <div class="filter-group-title" onclick="Filters.toggleGroup(this)">
+            Premium Over Retail <span class="fg-arrow">↓</span>
+          </div>
+          <div class="filter-group-body">
+            <div class="filter-checkboxes">
+              <label class="fcheck"><input type="checkbox" value="above" onchange="Filters.apply()"> Above retail</label>
+              <label class="fcheck"><input type="checkbox" value="below" onchange="Filters.apply()"> Below retail</label>
+              <label class="fcheck"><input type="checkbox" value="high"  onchange="Filters.apply()"> 2x+ retail</label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sort -->
+        <div class="filter-group">
+          <div class="filter-group-title" onclick="Filters.toggleGroup(this)">
+            Sort By <span class="fg-arrow">↓</span>
+          </div>
+          <div class="filter-group-body">
+            <div class="sort-options">
+              <button class="sort-btn on" data-sort="default"         onclick="Filters.setSort('default', this)">Default</button>
+              <button class="sort-btn"    data-sort="price-asc"       onclick="Filters.setSort('price-asc', this)">Price ↑</button>
+              <button class="sort-btn"    data-sort="price-desc"      onclick="Filters.setSort('price-desc', this)">Price ↓</button>
+              <button class="sort-btn"    data-sort="premium-desc"    onclick="Filters.setSort('premium-desc', this)">Most Premium</button>
+              <button class="sort-btn"    data-sort="premium-asc"     onclick="Filters.setSort('premium-asc', this)">Least Premium</button>
+              <button class="sort-btn"    data-sort="name-asc"        onclick="Filters.setSort('name-asc', this)">Name A–Z</button>
+            </div>
+          </div>
+        </div>
+
+      </aside>
+
+      <!-- ─── PRODUCT GRID ─── -->
+      <div class="products-grid" id="productsGrid"></div>
+
+    </div>
+  </section>
+
+  <!-- ─── DETAIL OVERLAY ─── -->
+  <div class="detail-overlay" id="detailOverlay">
+
+    <button class="back-btn" onclick="Detail.close()">← Back</button>
+
+    <div class="detail-scroll-container" id="detailScrollContainer">
+
+      <div class="ds-hero">
+        <div class="ds-hero-left">
+          <div class="ds-brand" id="dsBrand"></div>
+          <div class="ds-name"  id="dsName"></div>
+          <div class="ds-sku"   id="dsSku"></div>
+          <div class="ds-cta">Scroll to explore ↓</div>
+        </div>
+        <div class="ds-hero-img-wrap">
+          <img class="ds-hero-img" id="dsHeroImg" src="" alt="Product" />
+        </div>
+      </div>
+
+      <div class="drip-wrapper">
+        <div class="drip-sticky">
+          <div class="viewer-container" id="viewerContainer">
+            <img class="viewer-img" id="viewerImg" src="" alt="Product" />
+            <div class="viewer-hint"  id="viewerHint">↔ Drag to rotate</div>
+            <div class="viewer-frame" id="viewerFrame">1 / 1</div>
+          </div>
+          <div class="gallery-strip" id="galleryStrip"></div>
+        </div>
+
+        <div class="drip-panels" id="dripPanels">
+          <div class="drip-panel" data-panel="price">
+            <div class="panel-label">Market Price</div>
+            <div class="panel-value" id="dpPrice">—</div>
+            <div class="panel-sub"   id="dpPremium"></div>
+          </div>
+          <div class="drip-panel" data-panel="retail">
+            <div class="panel-label">Retail</div>
+            <div class="panel-value" id="dpRetail">—</div>
+            <div class="panel-sub"   id="dpRetailSub"></div>
+          </div>
+          <div class="drip-panel" data-panel="range">
+            <div class="panel-label">Price Range</div>
+            <div class="panel-value"  id="dpMin">—</div>
+            <div class="panel-divider">–</div>
+            <div class="panel-value2" id="dpMax">—</div>
+            <div class="panel-sub">Low · High</div>
+          </div>
+          <div class="drip-panel" data-panel="sales">
+            <div class="panel-label">Silhouette</div>
+            <div class="panel-value" id="dpWeekly">—</div>
+            <div class="panel-sub"   id="dpWeeklySub"></div>
+          </div>
+          <div class="drip-panel" data-panel="outlook">
+            <div class="panel-label">Price Outlook</div>
+            <div class="outlook-verdict" id="dpVerdict"></div>
+            <div class="outlook-track">
+              <div class="outlook-fill" id="dpOutlookFill"></div>
+            </div>
+            <div class="outlook-markers">
+              <span>Bearish</span><span>Neutral</span><span>Bullish</span>
+            </div>
+          </div>
+          <div class="drip-panel drip-panel--desc" data-panel="desc">
+            <div class="panel-label">About</div>
+            <div class="panel-desc" id="dpDesc"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="chart-section">
+        <div class="chart-top">
+          <div class="chart-title">PRICE HISTORY</div>
+          <div class="chart-tabs">
+            <button class="ctab on" onclick="Chart.switchView('avg', this)">Market Value</button>
+            <button class="ctab"    onclick="Chart.switchView('volume', this)">vs Retail</button>
+          </div>
+        </div>
+        <div class="chart-wrap">
+          <canvas id="priceChart" role="img" aria-label="Price chart">Price history unavailable.</canvas>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="/javascript/api.js"></script>
+  <script src="/javascript/ui.js"></script>
+  <script src="/javascript/filters.js"></script>
+  <script src="/javascript/search.js"></script>
+  <script src="/javascript/viewer.js"></script>
+  <script src="/javascript/detail.js"></script>
+  <script src="/javascript/chart.js"></script>
+  <script src="/javascript/main.js"></script>
+
+  <script>
+    // Sneakers — browse all sneakers (no query, just category)
+    function navSneakers() {
+      document.getElementById('searchInput').value = '';
+      Search.browse({ label: 'All Sneakers' });
+    }
+
+    // Apparel — TSDB is sneakers-only; show top streetwear brands as proxy
+    function navApparel() {
+      document.getElementById('searchInput').value = '';
+      Search.browse({ label: 'Streetwear', brands: ['Supreme', 'Off-White', 'Palace', 'BAPE', 'Fear of God'] });
+    }
+
+    // Trending — browse most popular brands right now
+    function navTrending() {
+      document.getElementById('searchInput').value = '';
+      Search.browse({ label: 'Trending', brands: ['Nike', 'Jordan', 'Adidas', 'New Balance', 'Salomon'] });
+    }
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,151 @@
+/* ─── GRID HEADER WITH FILTER BUTTON ─── */
+.grid-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 1.8rem 2.5rem 1.2rem;
+  border-bottom: 1px solid var(--border);
+}
+.grid-header-right { display: flex; align-items: center; gap: 1.2rem; }
+
+.filter-toggle-btn {
+  font-family: 'DM Mono', monospace; font-size: 0.62rem;
+  letter-spacing: 0.15em; text-transform: uppercase;
+  padding: 0.5rem 1.1rem; border: 1px solid var(--border);
+  border-radius: 2px; background: transparent;
+  color: var(--black); cursor: pointer; transition: all .2s;
+}
+.filter-toggle-btn:hover,
+.filter-toggle-btn.active { background: var(--black); color: var(--bg); border-color: var(--black); }
+
+/* ─── GRID BODY (sidebar + grid) ─── */
+.grid-body {
+  display: flex; align-items: flex-start;
+}
+
+/* ─── FILTER SIDEBAR ─── */
+.filter-sidebar {
+  width: 0; min-width: 0; overflow: hidden;
+  border-right: 1px solid transparent;
+  transition: width .35s cubic-bezier(.25,.46,.45,.94),
+              min-width .35s cubic-bezier(.25,.46,.45,.94);
+  flex-shrink: 0;
+  position: sticky; top: 54px;
+  height: calc(100vh - 54px);
+  overflow-y: auto;
+  background: var(--bg);
+}
+.filter-sidebar.open {
+  width: 280px; min-width: 280px;
+  border-right-color: var(--border);
+}
+
+.filter-sidebar-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 1.5rem 1.4rem 1rem;
+  border-bottom: 1px solid var(--border);
+}
+.filter-sidebar-header span {
+  font-family: 'DM Mono', monospace; font-size: 0.62rem;
+  letter-spacing: 0.2em; text-transform: uppercase; color: var(--gray);
+}
+.filter-clear-btn {
+  font-family: 'DM Mono', monospace; font-size: 0.58rem;
+  letter-spacing: 0.1em; color: var(--red);
+  background: none; border: none; cursor: pointer;
+  text-decoration: underline; text-underline-offset: 2px;
+  transition: opacity .2s;
+}
+.filter-clear-btn:hover { opacity: .7; }
+
+/* ─── FILTER GROUP ─── */
+.filter-group {
+  border-bottom: 1px solid var(--border);
+}
+.filter-group-title {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 1rem 1.4rem; cursor: pointer;
+  font-family: 'DM Mono', monospace; font-size: 0.65rem;
+  letter-spacing: 0.15em; text-transform: uppercase;
+  color: var(--black); user-select: none;
+  transition: color .2s;
+}
+.filter-group-title:hover { color: var(--gray); }
+.fg-arrow { transition: transform .25s; font-size: 0.7rem; }
+.filter-group.collapsed .fg-arrow { transform: rotate(-90deg); }
+.filter-group.collapsed .filter-group-body { display: none; }
+
+.filter-group-body { padding: 0.5rem 1.4rem 1.2rem; }
+
+/* ─── PRICE INPUTS ─── */
+.price-inputs {
+  display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem;
+}
+.price-field { flex: 1; display: flex; flex-direction: column; gap: 0.3rem; }
+.price-field label {
+  font-family: 'DM Mono', monospace; font-size: 0.55rem;
+  letter-spacing: 0.12em; text-transform: uppercase; color: var(--gray);
+}
+.price-field input {
+  width: 100%; border: 1px solid var(--border); border-radius: 2px;
+  background: #fff; color: var(--black);
+  font-family: 'DM Mono', monospace; font-size: 0.75rem;
+  padding: 0.4rem 0.6rem; outline: none;
+  transition: border-color .2s;
+}
+.price-field input:focus { border-color: var(--black); }
+.price-sep { font-family: 'DM Mono', monospace; color: var(--gray2); font-size: 0.8rem; padding-top: 1.2rem; }
+
+.price-presets {
+  display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.5rem;
+}
+.price-presets button {
+  font-family: 'DM Mono', monospace; font-size: 0.58rem;
+  letter-spacing: 0.08em; padding: 0.3rem 0.65rem;
+  border: 1px solid var(--border); border-radius: 20px;
+  background: transparent; cursor: pointer; color: var(--gray);
+  transition: all .2s;
+}
+.price-presets button:hover,
+.price-presets button.active { background: var(--black); color: var(--bg); border-color: var(--black); }
+
+/* ─── CHECKBOXES ─── */
+.filter-checkboxes { display: flex; flex-direction: column; gap: 0.55rem; }
+.fcheck {
+  display: flex; align-items: center; gap: 0.6rem;
+  font-family: 'DM Mono', monospace; font-size: 0.65rem;
+  letter-spacing: 0.05em; color: var(--black);
+  cursor: pointer; user-select: none;
+}
+.fcheck input[type="checkbox"] {
+  width: 14px; height: 14px; accent-color: var(--black);
+  cursor: pointer;
+}
+
+/* ─── SORT BUTTONS ─── */
+.sort-options { display: flex; flex-direction: column; gap: 0.4rem; }
+.sort-btn {
+  font-family: 'DM Mono', monospace; font-size: 0.62rem;
+  letter-spacing: 0.1em; text-align: left;
+  padding: 0.45rem 0.8rem; border: 1px solid var(--border);
+  border-radius: 2px; background: transparent;
+  color: var(--gray); cursor: pointer; transition: all .2s;
+}
+.sort-btn:hover, .sort-btn.on { background: var(--black); color: var(--bg); border-color: var(--black); }
+
+/* ─── ACTIVE FILTER CHIPS ─── */
+.active-filters {
+  display: flex; gap: 0.5rem; flex-wrap: wrap;
+  padding: 0.75rem 2.5rem; border-bottom: 1px solid var(--border);
+}
+.active-filters:empty { display: none; }
+.filter-chip {
+  display: flex; align-items: center; gap: 0.4rem;
+  font-family: 'DM Mono', monospace; font-size: 0.58rem;
+  letter-spacing: 0.1em; padding: 0.3rem 0.75rem;
+  background: var(--black); color: var(--bg);
+  border-radius: 20px; cursor: pointer;
+}
+.filter-chip:hover { opacity: .75; }
+
+/* ─── SCROLLBAR for sidebar ─── */
+.filter-sidebar::-webkit-scrollbar { width: 3px; }
+.filter-sidebar::-webkit-scrollbar-thumb { background: var(--gray2); }
