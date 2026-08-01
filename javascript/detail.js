@@ -1,11 +1,5 @@
-/**
- * detail.js — KicksDB field mapping:
- *   title, brand, sku, description, image, gallery[], gallery_360[],
- *   avg_price, min_price, max_price, retail_price, weekly_orders
- */
 
 const Detail = (() => {
-
   let currentProduct = null;
   let panelObserver  = null;
 
@@ -104,6 +98,22 @@ const Detail = (() => {
       fillEl.style.width      = '0%';
       fillEl.style.background = noData ? '#bbb' : UI.outlookColor(score);
       setTimeout(() => { fillEl.style.width = (noData ? 50 : score) + '%'; }, 500);
+    }
+
+    // ── Shop Links ──
+    const shopBtns = document.getElementById('dpShopBtns');
+    if (shopBtns) {
+      const slug  = encodeURIComponent(p.slug || p.id || '');
+      const query = encodeURIComponent(p.title || '');
+      const platforms = [
+        { name: 'StockX',      url: `https://stockx.com/${slug}` },
+        { name: 'GOAT',        url: `https://www.goat.com/sneakers/${slug}` },
+        { name: 'Flight Club', url: `https://www.flightclub.com/${slug}` },
+        { name: 'Carousell',   url: `https://www.carousell.com/search/?searchQuery=${query}` },
+      ];
+      shopBtns.innerHTML = platforms
+        .map(pl => `<a class="shop-btn" href="${pl.url}" target="_blank" rel="noopener noreferrer">${pl.name}</a>`)
+        .join('');
     }
 
     // ── Description ──

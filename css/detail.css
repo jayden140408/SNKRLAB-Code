@@ -245,6 +245,19 @@
 }
 .drip-panel--desc { min-height: 60vh; }
 
+/* ── SHOP PANEL ── */
+.drip-panel--shop { min-height: auto; padding: 3rem 3.5rem; }
+.shop-btns { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 1rem; }
+.shop-btn {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.65rem; letter-spacing: 0.15em; text-transform: uppercase;
+  padding: 0.8rem 1.6rem;
+  border: 1px solid rgba(0,0,0,0.15); border-radius: 2px;
+  background: transparent; color: #0d0d0d;
+  text-decoration: none; transition: background .2s, color .2s, border-color .2s;
+}
+.shop-btn:hover { background: #0d0d0d; color: #f2efe9; border-color: #0d0d0d; }
+
 /* ─── CHART ─── */
 .chart-section {
   padding: 4rem 5rem 6rem;
